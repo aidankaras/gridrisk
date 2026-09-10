@@ -1,0 +1,42 @@
+name: Daily retrain and evaluate
+
+on:
+  schedule:
+    # 22:30 UTC = ~4:30pm CT, after ERCOT day-ahead market data for the day
+    # is typically finalized. Runs every weekday; ERCOT trades on weekends
+    # too, but this keeps the schedule simple for now.
+    - cron: "30 22 * * 1-5"
+  workflow_dispatch: {}
+
+jobs:
+  retrain:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+      - name: Set up Python
+        run: uv python install 3.12
+      - name: Install dependencies
+        run: uv sync --all-extras --dev
+      - name: Pull latest data, retrain, and re-evaluate
+        env:
+          ERCOT_API_USERNAME: ${{ secrets.ERCOT_API_USERNAME }}
+          ERCOT_API_PASSWORD: ${{ secrets.ERCOT_API_PASSWORD }}
+          EIA_API_KEY: ${{ secrets.EIA_API_KEY }}
+        run: |
+          echo "Placeholder: real ERCOT/EIA credentials are not yet configured for this repo."
+          echo "Once gridrisk/data/ercot.py and gridrisk/data/eia.py are implemented and"
+          echo "the secrets above are set in the repo settings, this step should call a"
+          echo "script (e.g. scripts/daily_retrain.py) that pulls new data, re-runs"
+          echo "gridrisk.evaluation.run_backtest, and commits updated dashboard data."
+          exit 0
+      # - name: Commit updated dashboard data
+      #   run: |
+      #     git config user.name "gridrisk-bot"
+      #     git config user.email "actions@github.com"
+      #     git add data/latest_backtest.json
+      #     git commit -m "Daily retrain: update dashboard data" || echo "No changes"
+      #     git push
